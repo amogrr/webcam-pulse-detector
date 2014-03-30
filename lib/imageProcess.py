@@ -109,12 +109,16 @@ class showBPMtext(Component):
         if self.ready:
             col = (0,255,0)
             text = "%0.1f bpm" % self.bpm
+            text2 = ""
             tsize = 2
         else:
             col = (100,255,100)
             gap = (self.n - self.size) / self.fps
-            text = "(estimate: %0.1f bpm, wait %0.0f s)" % (self.bpm, gap)
+            text = "estimate: %0.1f bpm" % (self.bpm)
+            text2 = "wait %0.0f s" % (gap) 
             tsize = 1
         cv2.putText(self.frame_in,text,
                     (self.x,self.y),cv2.FONT_HERSHEY_PLAIN,tsize,col)
+        cv2.putText(self.frame_in,text2,
+                    (self.x,self.y-20),cv2.FONT_HERSHEY_PLAIN,tsize,col)
         self.frame_out = self.frame_in

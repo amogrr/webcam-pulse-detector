@@ -164,7 +164,7 @@ class bandProcess(Component):
         else:
             idx = np.where((self.freqs_in < self.limits[0]) 
                            & (self.freqs_in > self.limits[1]))
-        self.freqs = self.freqs_in[idx] 
+        self.freqs = self.freqs_in[idx]
         self.fft = np.abs(self.fft_in[idx])**2
         
         if self.make_filtered:
@@ -191,7 +191,7 @@ class Cardiac(bandProcess):
     def __init__(self, bpm_limits = [50,160]):
         super(Cardiac,self).__init__()
         self.add("bpm", Float(iotype="out"))
-        self.limits = [bpm_limits[0]/60., bpm_limits[1]/60.]
+        self.limits = [bpm_limits[0]*0.0166666667, bpm_limits[1]*0.0166666667]
         
     def execute(self):
         super(Cardiac,self).execute()

@@ -14,7 +14,6 @@ import datetime
 import matplotlib.dates as md
 import time
 import sys
-import math
 ##########################
 #global total
 #total = 0
@@ -25,27 +24,17 @@ dhr = 50
 eyetot = 0
 norm = 0
 ##########################
+line1 = 0
+line2 = 0
 import os.path
-if (os.path.isfile('diagnostics.txt')) == False:
-    print("Diagnostics file not found. Run diagnostics first!")
+if (os.path.isfile('diagnostics.txt')) == True:
+    print("Diagnostics file exists! System will not overwrite without deleting it first.")
     sys.exit()
-else:
-    diag = open('diagnostics.txt','r')
-    z = 0
-    for line in diag:
-        if z == 0:
-            z+=1
-            dhr = float(line.rstrip('\n'))
-        else:
-            norm = float(line.rstrip('\n'))
 
-f = open('timedata.txt','w')
-e = open('eyedata.txt','w')
-hr = open('heartdata.txt','w')
-sm = open('smiledata.txt','w')
 cv.NamedWindow("camera", 1)
 capture = cv.CreateCameraCapture(0)
 
+f = open('diagnostics.txt','w')
 #font = cv.CvFont
 font = cv.InitFont(1, 1, 1, 1, 1, 1)
 
@@ -53,8 +42,7 @@ width = None
 height = None
 width = 320
 height = 240
-smileneighbour = 0
-smilecount = 0
+
 
 if width is None:
     width = int(cv.GetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -73,9 +61,6 @@ mqLoop = 0
 
 
 #openCV functions
-def Load():
-
-    return (faceCascade, smileCascade)
 
 def Display(image):
     cv.NamedWindow("Smile Test")
@@ -83,7 +68,7 @@ def Display(image):
     cv.WaitKey(0)
     cv.DestroyWindow("Smile Test")
 
-def DetectRedEyes(image, faceCascade, smileCascade, eyeCascade):
+def DetectRedEyes(image, faceCascade):
     min_size = (20,20)
     image_scale = 2
     haar_scale = 1.1
@@ -106,80 +91,32 @@ def DetectRedEyes(image, faceCascade, smileCascade, eyeCascade):
     # Detect the faces
     faces = cv.HaarDetectObjects(smallImage, faceCascade, cv.CreateMemStorage(0),
     haar_scale, min_neighbors, haar_flags, min_size)
-    global norm
+
     # If faces are found
     if faces:
         
         #print faces
-        ratio = 1.
+
         for ((x, y, w, h), n) in faces:
         # the input to cv.HaarDetectObjects was resized, so scale the
         # bounding box of each face and convert it to two CvPoints
             #print "face"
-            if h!=0:
-                ratio = h/norm
-
+            global line2
+            line2 = n
             pt1 = (int(x * image_scale), int(y * image_scale))
             pt2 = (int((x + w) * image_scale), int((y + h) * image_scale))
             # print pt1
             # print pt2
-            #cv.Rectangle(image, pt1, pt2, cv.RGB(255, 0, 0), 1, 8, 0)
-            #cv.PutText(image, "face"+str(h), pt1, font, cv.RGB(255, 0, 0))
-            face_region = cv.GetSubRect(image,(x,int(y + (h/4)),w,int(h/2)))
-
-            #split face
-            #cv.Rectangle(image, (pt1[0],(pt1[1] + (abs(pt1[1]-pt2[1]) / 2 ))), pt2, cv.RGB(0,255,0), 1, 8, 0)
-            #cv.PutText(image, "lower", (pt1[0],(pt1[1] + (abs(pt1[1]-pt2[1]) / 2 ))), font, cv.RGB(0, 255, 0))
-            cv.SetImageROI(image, (pt1[0],
-                               (pt1[1] + int(abs(pt1[1]-pt2[1]) * 0.625 )),
-                               pt2[0] - pt1[0],
-                               int((pt2[1] - (pt1[1] + int(abs(pt1[1]-pt2[1]) * 0.625 ))))))
+            cv.Rectangle(image, pt1, pt2, cv.RGB(255, 0, 0), 1, 8, 0)
+            cv.PutText(image, "face"+str(h), pt1, font, cv.RGB(255, 0, 0))
+            cv.PutText(image, "Come close.", (0,20), font, cv.RGB(255, 0, 0))
+            cv.PutText(image, "Ensure your forehead is well lit.", (0,40), font, cv.RGB(255, 0, 0))            
+            cv.PutText(image, "Hit escape when done.", (0,60), font, cv.RGB(255, 0, 0))
             
-            smiles = cv.HaarDetectObjects(image, smileCascade, cv.CreateMemStorage(0), 1.1, 5, 0, (15,15))
-        
-            if smiles:
-                #print smiles          
-                for smile in smiles:
-                    cv.Rectangle(image,
-                    (smile[0][0],smile[0][1]),
-                    (smile[0][0] + smile[0][2], smile[0][1] + smile[0][3]),
-                    cv.RGB(0, 0, 255), 1, 8, 0)
-                    sizer = (smile[0][2]/ratio+smile[0][3]/ratio)#+(smile[1]/ratio))
-                    #sizer = math.trunc(sizer)
-                    #cv.PutText(image, "smile", (smile[0][0],smile[0][1]), font, cv.RGB(0, 0, 255))
-
-                    cv.PutText(image,str(math.trunc(sizer**2)), (smile[0][0], smile[0][1] + smile[0][3] + 10), font, cv.RGB(0, 0, 255))
-                    #print ((abs(smile[0][1] - smile[0][2]) / abs(pt1[0] - pt2[0])) * 100) 
-                    
-                    global smileneighbour 
-                    smileneighbour = sizer**2*2
-            cv.ResetImageROI(image)
-            #############################################################################
-            #############################################################################
-            cv.SetImageROI(image, (pt1[0], pt1[1], int(pt2[0]-pt1[0]), int(pt2[1] - pt1[1])) )
-            eyes = cv.HaarDetectObjects(image, eyeCascade,cv.CreateMemStorage(0),haar_scale, 5,haar_flags, (15,15))
-            if eyes:
-                # For each eye found
-                iii = 0
-                #print eyes
-                for eye in eyes:
-                    # Draw a rectangle around the eye
-                   cv.Rectangle(image,(eye[0][0],eye[0][1]),(eye[0][0] + eye[0][2],eye[0][1] + eye[0][3]), cv.RGB(0, 0, 255), 1, 8, 0)
-                   a = math.trunc(float(eye[1])/ratio)
-                   cv.PutText(image,str(a), (eye[0][0], eye[0][1] + eye[0][3]), font, cv.RGB(0, 0, 255))
-                   global eyetot
-                   eyetot += float(eye[1]*eye[1])/ratio
-                   iii+=1
-                   if iii==2:
-                       iii = 0
-                       break
-            cv.ResetImageROI(image)
     cv.ResetImageROI(image)
     return image
 
 faceCascade = cv.Load("haarcascade_frontalface_alt.xml")
-smileCascade = cv.Load("smileD\smiled_01.xml")#"haarcascade_smile.xml")
-eyeCascade = cv.Load("haarcascade_eye.xml")
 
 
 ##########################
@@ -260,24 +197,6 @@ class AnalyseEmotion(object):
             self.make_bpm_plot()
             moveWindow(self.plot_title, self.w,0)
 
-    def make_bpm_plot(self):
-        """
-        Creates and/or updates the data display
-        """
-        plotXY([[self.processor.fft.times, 
-                 self.processor.fft.samples],
-                [self.processor.fft.even_times[4:-4], 
-                 self.processor.measure_heart.filtered[4:-4]],
-                [self.processor.measure_heart.freqs, 
-                 self.processor.measure_heart.fft]], 
-               labels = [False, False, True],
-               showmax = [False,False, "bpm"], 
-               label_ndigits = [0,0,0],
-               showmax_digits = [0,0,1],
-               skip = [3,3,4],
-               name = self.plot_title, 
-               bg = self.processor.grab_faces.slices[0])
-
     def key_handler(self):    
         """
         Handle keystrokes, as set at the bottom of __init__()
@@ -285,11 +204,16 @@ class AnalyseEmotion(object):
         A plotting or camera frame window must have focus for keypresses to be
         detected.
         """
-
+        global line2
         self.pressed = waitKey(10) & 255 #wait for keypress for 10 ms
-        if self.pressed == 27: #exit program on 'esc'
+        if self.pressed == 27 and self.processor.fft.ready == True: #exit program on 'esc'
             print "exiting..."
             self.camera.cam.release()
+            #a = sum(self.processor.fft.samples)/float(len(self.processor.fft.samples))
+            print >>f, str(self.processor.show_bpm_text.bpm)
+            print >>f, str(line2)
+            #f.write(str(a) + "\n")
+            #f.write(str(line2) + "\n")
             exit()
 
         for key in self.key_controls.keys():
@@ -319,36 +243,23 @@ class AnalyseEmotion(object):
         imshow("Processed",output_frame)
 
         #create and/or update the raw data display if needed
-        global smileneighbour, mqLoop, smilecount, eyetot
         #if self.bpm_plot:
-            #self.make_bpm_plot()  
-        if mqLoop >= 1:
-            x = str(datetime.datetime.now())
-            sm.write(str(md.datestr2num(x)) + " " + str(smileneighbour) + "\n")
-            e.write(str(md.datestr2num(x)) + " " + str(eyetot) + "\n")
-            hr.write(str(md.datestr2num(x)) + " " + str(self.processor.show_bpm_text.bpm) + "\n")
-            smileneighbour+= 2*eyetot
-            smileneighbour/=100
-            if (self.processor.show_bpm_text.bpm) > dhr:
-                #print (self.processor.fft.samples[-1]/2, self.processor.fft.samples[-1]-dhr/2)
-                #overbeat = (self.processor.fft.samples[-1]-dhr)*(self.processor.fft.samples[-1]-dhr)
-                smileneighbour += (self.processor.show_bpm_text.bpm-dhr)
-            
-            
-            f.write(str(md.datestr2num(x)) + " " + str(smileneighbour) + "\n")
-            mqLoop = 0
+            #self.make_bpm_plot() 
+        #print(self.processor.fft.samples) 
+        if(self.processor.fft.ready):
+            print "Ready to hit escape"
         else:
-            mqLoop+= 0.9    
+            print".",
+        
         img = cv.QueryFrame(capture)    
-        smileneighbour = 0
-        eyetot = 0
         if img:
-            image = DetectRedEyes(img, faceCascade, smileCascade, eyeCascade)
+            image = DetectRedEyes(img, faceCascade)
             cv.ShowImage("camera", image)
         #handle any key presses
         self.key_handler()
 
 if __name__ == "__main__":
     App = AnalyseEmotion()
+    print "Estimating...", 
     while True:
         App.main_loop()

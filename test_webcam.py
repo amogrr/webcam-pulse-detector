@@ -1,8 +1,9 @@
 import cv2, numpy
-
+import time
 #Create object to read images from camera 0
 cam = cv2.VideoCapture(0)
-
+time.sleep(3)
+print("out of sleep")
 while True:
     #Get image from webcam
     ret, img = cam.read()

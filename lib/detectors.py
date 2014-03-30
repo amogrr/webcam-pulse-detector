@@ -105,10 +105,7 @@ class faceDetector(cascadeDetection):
     def __init__(self, minSize=(50, 50), 
                  smooth = 10.,
                  return_one = True):
-        #fn = "cascades/haarcascade_frontalface_default.xml"
         fn="cascades/haarcascade_frontalface_alt.xml"
-        #fn="cascades/haarcascade_frontalface_alt2.xml"
-        #fn = "cascades/haarcascade_frontalface_alt_tree"
         super(faceDetector, self).__init__(fn, 
                                            minSize = minSize,
                                            smooth = smooth,
